@@ -717,38 +717,30 @@ for turn in range(max_turns):              <span class="c-good"># ✓ bounded</s
 
 <pre><code><span class="c-warn"># PROPERTY TYPES — JSONSchema strings, not Python types</span>
 "string"  "integer"  "number"  "boolean"  "array"  "object"  "null"
-<span class="c-comment"># integer = ints only · number = float-or-int · "int"/"float"/"str" silently rejected</span>
+<span class="c-comment"># integer = ints only · number = float-or-int</span>
 
 <span class="c-warn"># REQUIRED — top-level array; names must match `properties` keys</span>
-"required": ["query", "limit"]                    <span class="c-good"># ✓ enforced</span>
+"required": ["query", "limit"]
 <span class="c-comment"># omit it and the model may skip any param without complaint</span>
 
 <span class="c-warn"># ENUM — constrain a string to a fixed set</span>
 {"type": "string", "enum": ["pending", "approved", "rejected"]}
 
 <span class="c-warn"># ARRAYS — `items` is mandatory</span>
-{"type": "array", "items": {"type": "string"}}    <span class="c-good"># ✓</span>
-{"type": "array"}                                  <span class="c-warn"># ✗ schema invalid</span>
+{"type": "array", "items": {"type": "string"}}
 
 <span class="c-warn"># EMPTY-INPUT TOOLS — still need type=object</span>
-"input_schema": {"type": "object", "properties": {}}  <span class="c-good"># ✓ takes no args</span>
-"input_schema": {}                                    <span class="c-warn"># ✗ rejected</span>
+"input_schema": {"type": "object", "properties": {}}
 
-<span class="c-warn"># FIELD NAME — input_schema, NOT parameters (that's OpenAI)</span>
-{"name": ..., "description": ..., "input_schema": {...}}    <span class="c-good"># ✓</span>
-{"name": ..., "description": ..., "parameters": {...}}      <span class="c-warn"># ✗ silently dropped</span>
+<span class="c-warn"># TOOL NAMES — ^[a-zA-Z0-9_-]{1,64}$  (letters, digits, underscore, hyphen)</span>
+"query_database"     "query-database"     "issue_refund_v2"
 
-<span class="c-warn"># TOOL NAMES — ^[a-zA-Z0-9_-]{1,64}$</span>
-"query_database"   <span class="c-good">✓</span>      "query.database"   <span class="c-warn">✗ no dots</span>
-"query-database"   <span class="c-good">✓</span>      "query database"   <span class="c-warn">✗ no spaces</span>
+<span class="c-warn"># DESCRIPTIONS — examples in-line beat format hints</span>
+{"type": "string", "description": "ISO 8601 date, e.g. '2026-04-28'"}
 
-<span class="c-warn"># DESCRIPTIONS &gt; FORMAT — examples beat hints</span>
-{"type": "string", "format": "date"}                              <span class="c-comment"># hint only</span>
-{"type": "string", "description": "ISO 8601, e.g. '2026-04-28'"}  <span class="c-good"># much better</span>
-
-<span class="c-warn"># DEFAULTS — informational, not enforced by the API</span>
-{"limit": {"type": "integer", "default": 10}}     <span class="c-comment"># model may ignore</span>
-<span class="c-comment"># If a default matters, apply it in your dispatcher: limit = inputs.get("limit", 10)</span>
+<span class="c-warn"># DEFAULTS — informational only; apply them in your dispatcher</span>
+{"limit": {"type": "integer", "default": 10}}
+<span class="c-comment"># limit = inputs.get("limit", 10)   ← actual enforcement lives here</span>
 
 <span class="c-warn"># SCHEMA PROPS MUST MATCH FUNCTION PARAMS — see Python · runtime above</span>
 <span class="c-comment"># schema "query" → fn(query=...) · mismatch → TypeError on **inputs unpack</span></code></pre>
@@ -844,21 +836,20 @@ def run_eval(tests):
   <div class="marker">§06<span class="label">Output</span></div>
   <div>
     <h2>Get structured output reliably.</h2>
-    <p class="lede">Two patterns. Pattern A is the model-native path; Pattern B is the fallback.</p>
+    <p class="lede">Define the shape as a tool. Force the call. Read <code>block.input</code>. No Pydantic, no parsing, no fences — the SDK delivers a dict that already conforms to your schema.</p>
 
-    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Pattern A — Tool-call coercion <span style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--ink-soft); letter-spacing:0.1em; margin-left:0.6rem;">// PREFERRED</span></h3>
-    <p>Define the schema as a tool. Force the model to call it. The structured object is just <code>tool_use.input</code>. No regex, no JSON parsing, no fence-stripping — the SDK already validated the shape.</p>
-
-<pre><code>from pydantic import BaseModel, Field
-
-class FinalAnswer(BaseModel):
-    answer: str = Field(description="The final answer to the user's question.")
-    confidence: float = Field(description="0.0–1.0, how confident.", ge=0, le=1)
-
-return_tool = {
+<pre><code>return_tool = {
     "name": "return_final_answer",
     "description": "Return the final answer as a structured object. Call this exactly once when done.",
-    <span class="c-good">"input_schema": FinalAnswer.model_json_schema(),</span>
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "answer":     {"type": "string", "description": "The final answer."},
+            "confidence": {"type": "number", "description": "0.0–1.0."},
+            "sources":    {"type": "array",  "items": {"type": "string"}},
+        },
+        "required": ["answer", "confidence"],
+    },
 }
 
 response = client.messages.create(
@@ -869,7 +860,7 @@ response = client.messages.create(
 )
 
 block = next(b for b in response.content if b.type == "tool_use")
-result = <span class="c-good">FinalAnswer(**block.input)</span>     <span class="c-comment"># validated, type-safe</span></code></pre>
+result = <span class="c-good">block.input</span>     <span class="c-comment"># {"answer": "...", "confidence": 0.92, "sources": [...]}</span></code></pre>
 
     <p style="margin-top:0.8rem;"><strong><code>tool_choice</code> options:</strong></p>
 <pre><code>"auto"                                           <span class="c-comment"># model decides (default)</span>
@@ -877,32 +868,13 @@ result = <span class="c-good">FinalAnswer(**block.input)</span>     <span class=
 {"type": "tool", "name": "return_final_answer"}  <span class="c-comment"># MUST call this exact tool</span>
 {"type": "none"}                                 <span class="c-comment"># cannot call any tool</span></code></pre>
 
-    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.1rem;">Pattern B — Prompt + parse <span style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--ink-soft); letter-spacing:0.1em; margin-left:0.6rem;">// FALLBACK</span></h3>
-    <p>When you can't add a tool — or you want the structured output as the assistant's <em>text</em> rather than a tool call. Less reliable; always validate.</p>
-
-<pre><code>SCHEMA_HINT = (
-    "Return your final answer as a JSON object matching this schema:\n"
-    f"{json.dumps(FinalAnswer.model_json_schema(), indent=2)}\n"
-    "Respond with ONLY the JSON. No prose. No markdown fences."
-)
-
-text = next(b.text for b in response.content if b.type == "text")
-
-<span class="c-comment"># Regex-extract first {...} (handles one level of nesting)</span>
-m = re.search(r"\{(?:[^{}]|\{[^{}]*\})*\}", text, re.DOTALL)
-data = json.loads(m.group(0))
-result = <span class="c-good">FinalAnswer(**data)</span>     <span class="c-comment"># raises ValidationError on schema mismatch</span></code></pre>
-
     <p style="margin-top:1rem;"><strong>Gotchas, in order of how often they bite:</strong></p>
     <ul>
-      <li><strong>Pydantic → schema:</strong> use <code>Model.model_json_schema()</code> (Pydantic v2). v1 was <code>.schema()</code> — wrong call name silently produces a half-broken schema.</li>
-      <li><strong>Always validate received input:</strong> <code>Model(**input)</code> raises if the model fudged a field. Don't trust the SDK to enforce — it validates shape, not semantics.</li>
-      <li><strong>Required vs optional:</strong> Pydantic fields without defaults become <code>required</code> in the JSONSchema; with defaults, optional. The model can omit optional fields. If a field matters, don't give it a default.</li>
-      <li><strong>Don't coerce mid-loop:</strong> <code>tool_choice={"type": "tool", "name": "X"}</code> forces X this turn — even if the model should have called <code>query_database</code> first. Coerce only on the <em>final</em> turn, after data-gathering tools have run.</li>
-      <li><strong>Markdown fences are not your friend:</strong> for prompt-based output, ask for "no fences." If you must allow them, strip <code>```json</code> / <code>```</code> before <code>json.loads</code>.</li>
+      <li><strong><code>required</code> is doing the work.</strong> Anything not in <code>required</code> may be omitted by the model — even if it's described as essential. If a field matters, list it.</li>
+      <li><strong>The SDK validates shape, not semantics.</strong> <code>block.input["confidence"]</code> may be the right type and out-of-range. Validate values you actually care about.</li>
+      <li><strong>Don't coerce mid-loop.</strong> <code>tool_choice={"type": "tool", "name": "X"}</code> forces X <em>this turn</em> — even if the model should have called <code>query_database</code> first. Coerce only on the <em>final</em> turn, after data-gathering tools have run.</li>
+      <li><strong>Make the description on the tool earn its keep.</strong> "Call this exactly once when done" tells the model <em>when</em> — without it, the model may call your return-tool prematurely.</li>
     </ul>
-
-    <p style="margin-top:1rem;"><strong>Decision rule:</strong> use Pattern A unless something forces you to B. Tool-call coercion is the model-native path; prompt-and-parse is what you reach for when you're stuck.</p>
   </div>
 </section>
 
