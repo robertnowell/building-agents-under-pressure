@@ -836,11 +836,12 @@ def run_eval(tests):
   <div class="marker">§06<span class="label">Output</span></div>
   <div>
     <h2>Get structured output reliably.</h2>
-    <p class="lede">Define the shape as a tool. Force the call. Read <code>block.input</code>. No Pydantic, no parsing, no fences — the SDK delivers a dict that already conforms to your schema.</p>
+    <p class="lede">Define the shape as a tool. Include it alongside your other tools. The model calls it last — when it has the answer. Read <code>block.input</code>. No Pydantic, no parsing, no fences — the SDK delivers a dict that already conforms to your schema.</p>
 
 <pre><code>return_tool = {
     "name": "return_final_answer",
-    "description": "Return the final answer as a structured object. Call this exactly once when done.",
+    "description": "Return the final answer as a structured object. "
+                   "Call this exactly once, AFTER you've gathered everything you need.",
     "input_schema": {
         "type": "object",
         "properties": {
@@ -852,28 +853,20 @@ def run_eval(tests):
     },
 }
 
-response = client.messages.create(
-    model=MODEL, max_tokens=4096,
-    tools=[*tools, return_tool],
-    <span class="c-good">tool_choice={"type": "tool", "name": "return_final_answer"},</span>
-    messages=messages,
-)
+<span class="c-comment"># In your loop: include return_tool in `tools=[...]`. The model will call it</span>
+<span class="c-comment"># when finished. End the loop the moment you see it.</span>
 
-block = next(b for b in response.content if b.type == "tool_use")
-result = <span class="c-good">block.input</span>     <span class="c-comment"># {"answer": "...", "confidence": 0.92, "sources": [...]}</span></code></pre>
-
-    <p style="margin-top:0.8rem;"><strong><code>tool_choice</code> options:</strong></p>
-<pre><code>"auto"                                           <span class="c-comment"># model decides (default)</span>
-{"type": "any"}                                  <span class="c-comment"># MUST call some tool, model picks which</span>
-{"type": "tool", "name": "return_final_answer"}  <span class="c-comment"># MUST call this exact tool</span>
-{"type": "none"}                                 <span class="c-comment"># cannot call any tool</span></code></pre>
+for block in response.content:
+    if block.type == "tool_use" and block.name == "return_final_answer":
+        result = <span class="c-good">block.input</span>     <span class="c-comment"># {"answer": ..., "confidence": 0.92, "sources": [...]}</span>
+        return result</code></pre>
 
     <p style="margin-top:1rem;"><strong>Gotchas, in order of how often they bite:</strong></p>
     <ul>
+      <li><strong>Make the description on the tool earn its keep.</strong> "Call this exactly once when done" tells the model <em>when</em> — without it, the model may call the return-tool prematurely or never at all. Reinforce in the system prompt if you can.</li>
       <li><strong><code>required</code> is doing the work.</strong> Anything not in <code>required</code> may be omitted by the model — even if it's described as essential. If a field matters, list it.</li>
-      <li><strong>The SDK validates shape, not semantics.</strong> <code>block.input["confidence"]</code> may be the right type and out-of-range. Validate values you actually care about.</li>
-      <li><strong>Don't coerce mid-loop.</strong> <code>tool_choice={"type": "tool", "name": "X"}</code> forces X <em>this turn</em> — even if the model should have called <code>query_database</code> first. Coerce only on the <em>final</em> turn, after data-gathering tools have run.</li>
-      <li><strong>Make the description on the tool earn its keep.</strong> "Call this exactly once when done" tells the model <em>when</em> — without it, the model may call your return-tool prematurely.</li>
+      <li><strong>The SDK validates shape, not semantics.</strong> <code>block.input["confidence"]</code> may be the right type and still out-of-range. Validate values you actually care about.</li>
+      <li><strong>Treat it like any other tool in the loop.</strong> If the model produces text-only or calls a different tool, you handle it the same way you'd handle any other turn — don't special-case the unhappy paths.</li>
     </ul>
   </div>
 </section>
@@ -900,6 +893,15 @@ result = <span class="c-good">block.input</span>     <span class="c-comment"># {
     "content": str(result),    <span class="c-comment"># or list of {type:"text", text:...}</span>
     "is_error": is_error,      <span class="c-comment"># bool — wire through dispatcher</span>
 }</code></pre>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;"><code>tool_choice</code> options</h3>
+<pre><code>"auto"                                  <span class="c-comment"># model decides (default)</span>
+{"type": "any"}                         <span class="c-comment"># MUST call some tool, model picks which</span>
+{"type": "tool", "name": "X"}           <span class="c-comment"># MUST call tool X this turn</span>
+{"type": "none"}                        <span class="c-comment"># cannot call any tool</span>
+<span class="c-comment"># Forcing is rare. The usual flow: include tools, let the model choose.</span>
+<span class="c-comment"># If you do force a specific tool, do it on the LAST turn only — forcing</span>
+<span class="c-comment"># mid-loop kills data-gathering steps.</span></code></pre>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Troubleshooting · symptom → fix</h3>
     <table class="ref">
