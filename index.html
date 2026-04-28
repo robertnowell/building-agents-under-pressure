@@ -722,7 +722,83 @@ re.search(r"\d+", text)                <span class="c-comment"># → match obj o
 
 <!-- ════════════════════════ §5 ════════════════════════ -->
 <section>
-  <div class="marker">§05<span class="label">Reference</span></div>
+  <div class="marker">§05<span class="label">Trace+Eval</span></div>
+  <div>
+    <h2>See the loop. Score the loop.</h2>
+    <p class="lede">Two helpers. Both fit on one screen. Both visible to the interviewer as you build.</p>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Logging — one line per block</h3>
+    <p>Print in <strong>two places only</strong>: after every <code>messages.create()</code>, and after every dispatch. Nothing else. The loop's <em>change</em> is fully described by what the model just said + what each tool returned. The <code>messages</code> array is cumulative state — don't dump it.</p>
+
+<pre><code>def log_turn(n, response):
+    print(f"\n── turn {n} · stop={response.stop_reason} ──")
+    for block in response.content:
+        if block.type == "text":
+            print(f"  text  · {block.text[:120]}")
+        elif block.type == "thinking":
+            print(f"  think · {block.thinking[:120]}")
+        elif block.type == "tool_use":
+            print(f"  →  {block.name}({block.input})")
+
+def log_result(name, result, is_error):
+    glyph = "✗" if is_error else "✓"
+    print(f"  {glyph}  {name}: {str(result)[:120]}")</code></pre>
+
+    <p style="margin-top:1rem;">Wire-in (two lines in the loop):</p>
+<pre><code>for turn in range(max_turns):
+    response = client.messages.create(...)
+    <span class="c-good">log_turn(turn, response)</span>                          <span class="c-comment"># ← here</span>
+    if response.stop_reason == "end_turn": ...
+    messages.append({"role": "assistant", "content": response.content})
+    tool_results = []
+    for block in response.content:
+        if block.type == "tool_use":
+            result, is_error = call_tool(block.name, block.input)
+            <span class="c-good">log_result(block.name, result, is_error)</span>     <span class="c-comment"># ← and here</span>
+            tool_results.append({...})
+    messages.append({"role": "user", "content": tool_results})</code></pre>
+
+    <p style="margin-top:1rem;"><strong>Why these rules:</strong></p>
+    <ul>
+      <li><strong>One line per block</strong> — eyes scan vertically; glyph column lines up.</li>
+      <li><strong>Truncate to ~120 chars</strong> — a full SQL query or row dump destroys the trace.</li>
+      <li><strong>Glyphs over labels</strong> — <code>→</code> = call, <code>✓/✗</code> = result. Less text, more signal.</li>
+      <li><strong>Always print <code>stop_reason</code></strong> — single most important signal in the loop.</li>
+      <li><strong>Don't print the full <code>messages</code> array</strong> — it grows every turn. Trace change, not state.</li>
+    </ul>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.1rem;">Eval — 4 cases, substring match</h3>
+    <p>If 5 minutes remain, this is the bonus that lands. Run it before saying "done."</p>
+
+<pre><code>TESTS = [
+    ("How many customers are from France?",       "2"),
+    ("Total revenue from France-based customers?", "1575"),
+    ("Which product has the most orders?",         "Laptop"),
+    ("What is 25 + 30 * 2?",                       "85"),
+]
+
+def run_eval(tests):
+    passed = 0
+    for q, expected in tests:
+        try:
+            answer = run_agent(q)
+            ok = expected.lower() in str(answer).lower()
+        except Exception as e:
+            answer, ok = f"ERROR: {e}", False
+        glyph = "✓" if ok else "✗"
+        print(f"{glyph} {q}")
+        print(f"   expected: {expected}")
+        print(f"   got:      {str(answer)[:120]}\n")
+        passed += ok
+    print(f"── {passed}/{len(tests)} passed ──")</code></pre>
+
+    <p style="margin-top:1rem;"><strong>Say aloud while it runs:</strong> <em>"Substring match is a smoke test. Real eval is 5–10 verifiable prompts, log tool-call counts and tokens per case, LLM-as-judge calibrated on the first 20 — that's the </em>Writing Tools for Agents<em> guidance."</em> One sentence. Then move on.</p>
+  </div>
+</section>
+
+<!-- ════════════════════════ §6 ════════════════════════ -->
+<section>
+  <div class="marker">§06<span class="label">Reference</span></div>
   <div>
     <h2>Quick reference, for when memory fails.</h2>
 
@@ -795,9 +871,9 @@ re.search(r"\d+", text)                <span class="c-comment"># → match obj o
   </div>
 </section>
 
-<!-- ════════════════════════ §6 ════════════════════════ -->
+<!-- ════════════════════════ §7 ════════════════════════ -->
 <section>
-  <div class="marker">§06<span class="label">Opening</span></div>
+  <div class="marker">§07<span class="label">Opening</span></div>
   <div>
     <h2>The 90-second opening move.</h2>
     <p class="lede">When the brief is done, this is the script. Walk through it; then code.</p>
