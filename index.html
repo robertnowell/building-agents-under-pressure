@@ -28,6 +28,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { font-size: 16px; }
   ::selection { background: var(--ink); color: var(--paper); }
+  pre ::selection, pre::selection { background: var(--accent); color: var(--paper); }
 
   body {
     background: var(--paper);
@@ -572,7 +573,7 @@
         </ul>
       </div>
       <div class="axis">
-        <div class="name">Legibility</div>
+        <div class="name">Communication</div>
         <ul class="body">
           <li>Loud thinking — comments, commit messages, log lines</li>
           <li>Why-not-just-what for every fix</li>
@@ -728,10 +729,13 @@ re.search(r"\d+", text)                <span class="c-comment"># → match obj o
     <p class="lede">Two helpers. Both fit on one screen. Both make the loop's state legible to anyone reading the run — including future-you.</p>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Logging — one line per block</h3>
-    <p>Print in <strong>two places only</strong>: after every <code>messages.create()</code>, and after every dispatch. Nothing else. The loop's <em>change</em> is fully described by what the model just said + what each tool returned. The <code>messages</code> array is cumulative state — don't dump it.</p>
+    <p>Print in <strong>two places only</strong>: after every <code>messages.create()</code>, and after every tool dispatch. Nothing else. The loop's <em>change</em> is fully described by what the model just said + what each tool returned. The <code>messages</code> array is cumulative state — don't dump it.</p>
 
-<pre><code>def log_turn(n, response):
-    print(f"\n── turn {n} · stop={response.stop_reason} ──")
+<pre><code><span class="c-comment"># Loop-agnostic. Works for `for turn in range(N)`, `while stop_reason == "tool_use"`,</span>
+<span class="c-comment"># recursion, streaming, anything. The `── stop=... ──` line is the turn boundary.</span>
+
+def log_response(response):
+    print(f"\n── stop={response.stop_reason} ──")
     for block in response.content:
         if block.type == "text":
             print(f"  text  · {block.text[:120]}")
@@ -744,19 +748,16 @@ def log_result(name, result, is_error):
     glyph = "✗" if is_error else "✓"
     print(f"  {glyph}  {name}: {str(result)[:120]}")</code></pre>
 
-    <p style="margin-top:1rem;">Wire-in (two lines in the loop):</p>
-<pre><code>for turn in range(max_turns):
-    response = client.messages.create(...)
-    <span class="c-good">log_turn(turn, response)</span>                          <span class="c-comment"># ← here</span>
-    if response.stop_reason == "end_turn": ...
-    messages.append({"role": "assistant", "content": response.content})
-    tool_results = []
-    for block in response.content:
-        if block.type == "tool_use":
-            result, is_error = call_tool(block.name, block.input)
-            <span class="c-good">log_result(block.name, result, is_error)</span>     <span class="c-comment"># ← and here</span>
-            tool_results.append({...})
-    messages.append({"role": "user", "content": tool_results})</code></pre>
+    <p style="margin-top:1rem;">Wire-in (two lines, anywhere in your loop):</p>
+<pre><code><span class="c-comment"># wherever you call the model …</span>
+response = client.messages.create(...)
+<span class="c-good">log_response(response)</span>                              <span class="c-comment"># ← here</span>
+
+<span class="c-comment"># … and wherever you dispatch a tool</span>
+result, is_error = call_tool(name, tool_input)
+<span class="c-good">log_result(name, result, is_error)</span>                  <span class="c-comment"># ← and here</span></code></pre>
+
+    <p style="margin-top:0.8rem; font-size:0.92rem; color:var(--ink-soft);">If you want turn numbers, prepend them at the call site — keep loop-shape decisions out of the logger.</p>
 
     <p style="margin-top:1rem;"><strong>Why these rules:</strong></p>
     <ul>
@@ -819,7 +820,7 @@ def run_eval(tests):
     "is_error": is_error,      <span class="c-comment"># bool — wire through dispatcher</span>
 }</code></pre>
 
-    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Anthropic troubleshooting · symptom → fix</h3>
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Troubleshooting · symptom → fix</h3>
     <table class="ref">
       <thead>
         <tr><th>Symptom</th><th>Fix</th></tr>
