@@ -496,7 +496,7 @@
     <span class="vol">VOL. 01 / 2026</span>
   </div>
   <h1>Building Agents<br>Under <em>Pressure</em>.</h1>
-  <p class="subtitle">A reference for the patterns that hold up<br>when the timer is on.</p>
+  <p class="subtitle">Patterns that hold up<br>when the timer is on.</p>
   <span class="ornament">¶</span>
 </header>
 
@@ -505,18 +505,18 @@
   <div class="marker">§01<span class="label">Process</span></div>
   <div>
     <h2>The build order, in sequence.</h2>
-    <p class="lede">From Anthropic's five-ring tutorial &amp; the <em>writing-tools-for-agents</em> blog. Follow the order; resist the urge to leap ahead.</p>
+    <p class="lede">From Anthropic's five-ring tutorial &amp; the <em>writing-tools-for-agents</em> blog. Follow the order.</p>
 
     <ol class="numbered">
-      <li><strong>Read the problem fully.</strong> Don't skim. ~30 sec.</li>
-      <li><strong>Read the starter end-to-end</strong> (~90 sec). Inventory what's there <em>and</em> what's missing — that becomes your plan.</li>
-      <li><strong>Run it once.</strong> See the trace. Don't fix yet.</li>
-      <li><strong>State the plan</strong> (1–2 min). Architecture choice + 2–4 tools + workflow vs. agent.</li>
-      <li><strong>Build minimal end-to-end first.</strong> One tool, simplest path. Run.</li>
+      <li><strong>Read the problem fully.</strong> ~30 sec.</li>
+      <li><strong>Read the starter end-to-end</strong> (~90 sec). Inventory what's there <em>and</em> what's missing.</li>
+      <li><strong>Run it once.</strong> Don't fix yet.</li>
+      <li><strong>State the plan</strong> (1–2 min). Architecture + 2–4 tools + workflow vs. agent.</li>
+      <li><strong>Build minimal end-to-end.</strong> One tool, simplest path.</li>
       <li><strong>Iterate on tool descriptions + system prompt</strong> before adding more tools.</li>
-      <li><strong>Extend.</strong> More tools, edge cases, expansions.</li>
+      <li><strong>Extend.</strong> Tools, edge cases, expansions.</li>
       <li><strong>Add evals or document them.</strong> <em>"In prod I'd add 5–10 verifiable test prompts with regression alerts."</em></li>
-      <li><strong>Wrap up.</strong> Name the gap between this and prod — what you stubbed, what you'd harden next.</li>
+      <li><strong>Wrap up.</strong> Name the gap — what you stubbed, what you'd harden.</li>
     </ol>
 
     <blockquote>
@@ -531,54 +531,54 @@
   <div class="marker">§02<span class="label">Axes</span></div>
   <div>
     <h2>The five axes that matter.</h2>
-    <p class="lede">What separates a working agent from a polished one. Track these independently as you build.</p>
+    <p class="lede">What separates working from polished. Track independently.</p>
 
     <div class="axes">
       <div class="axis">
         <div class="name">Shipping</div>
         <ul class="body">
-          <li>Code runs end-to-end</li>
+          <li>Runs end-to-end</li>
           <li>Test query returns the right answer</li>
-          <li>Stubbed where building the real thing isn't the point</li>
-          <li>Used the time budget; didn't run over</li>
+          <li>Stubbed where the real thing isn't the point</li>
+          <li>Used the time budget</li>
         </ul>
       </div>
       <div class="axis">
         <div class="name">Safety</div>
         <ul class="body">
           <li>Read-only by default</li>
-          <li>Preconditions on mutating actions</li>
-          <li><code>is_error</code> wired through the dispatcher</li>
-          <li>Idempotency on mutating actions</li>
+          <li>Preconditions on mutations</li>
+          <li><code>is_error</code> wired through dispatcher</li>
+          <li>Idempotent mutations</li>
           <li>Refusal paths under uncertainty</li>
         </ul>
       </div>
       <div class="axis">
         <div class="name">Craft</div>
         <ul class="body">
-          <li>Tool descriptions ACI-quality (3–4 sentences, when-NOT-to-use, examples)</li>
-          <li>Real system prompt — named role + workflow + format</li>
-          <li><code>max_turns</code> safety guard</li>
-          <li>Structured returns (<code>dict</code> not <code>tuple</code>)</li>
-          <li>Schema constraints honored — props match function params</li>
+          <li>Tool descriptions: 3–4 sentences, when-NOT-to-use, examples</li>
+          <li>Real system prompt: role + workflow + format</li>
+          <li><code>max_turns</code> guard</li>
+          <li>Structured returns (<code>dict</code>, not <code>tuple</code>)</li>
+          <li>Schema props match function params</li>
         </ul>
       </div>
       <div class="axis">
         <div class="name">Judgment</div>
         <ul class="body">
-          <li>Workflow-vs-agent named explicitly, early</li>
-          <li>Parsimony — simplest thing first</li>
-          <li>Tradeoffs surfaced, not silently chosen</li>
-          <li>Prod-vs-demo distinctions made explicit</li>
+          <li>Workflow-vs-agent, named early</li>
+          <li>Simplest thing first</li>
+          <li>Tradeoffs surfaced</li>
+          <li>Prod-vs-demo distinctions explicit</li>
         </ul>
       </div>
       <div class="axis">
         <div class="name">Communication</div>
         <ul class="body">
-          <li>Loud thinking — comments, commit messages, log lines</li>
-          <li>Why-not-just-what for every fix</li>
-          <li>Tradeoffs documented inline as you make them</li>
-          <li>Future-you (or a teammate) can pick up cold</li>
+          <li>Loud thinking — comments, commits, logs</li>
+          <li>Why-not-what on every fix</li>
+          <li>Tradeoffs documented inline</li>
+          <li>Future-you can pick up cold</li>
         </ul>
       </div>
     </div>
@@ -590,18 +590,18 @@
   <div class="marker">§03<span class="label">Practice</span></div>
   <div>
     <h2>The discipline behind each axis.</h2>
-    <p class="lede">Each axis has a default move. Make it automatic; then it's there when the timer is on.</p>
+    <p class="lede">Each axis has a default move. Make it automatic.</p>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Safety <span style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--ink-soft); letter-spacing:0.1em; margin-left:0.6rem;">// HIGH-LEVERAGE</span></h3>
     <ul>
       <li><strong>Look at mutating tools first.</strong> Add precondition check + idempotency.</li>
     </ul>
-    <div class="callout">Defense should live in the tool itself, not the prompt — prompts are soft guards. For DB tools: read-only at the DB layer (<code>?mode=ro</code>), not just a Python check.</div>
-    <div class="callout">In prod, <code>issue_refund</code> / <code>notify</code> / <code>cancel</code> should be idempotent on <code>order_id</code> / <code>message_hash</code> / <code>customer_id</code> to prevent double-action from loop retries.</div>
+    <div class="callout">Defense lives in the tool, not the prompt. For DB: read-only at the layer (<code>?mode=ro</code>), not just a Python check.</div>
+    <div class="callout">Prod: <code>issue_refund</code> / <code>notify</code> / <code>cancel</code> idempotent on <code>order_id</code> / <code>message_hash</code> / <code>customer_id</code>.</div>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Craft</h3>
     <ul>
-      <li>Tool descriptions: <strong>3–4 sentences</strong>, explicit when-NOT-to-use, schema embedded for DB tools, examples in param descriptions.</li>
+      <li>Tool descriptions: <strong>3–4 sentences</strong>. When-NOT-to-use. Schema embedded for DB tools. Examples in param descriptions.</li>
       <li>Returns: <code>list[dict]</code> not <code>list[tuple]</code>. Semantic IDs &gt; UUIDs.</li>
     </ul>
     <blockquote>
@@ -609,7 +609,7 @@
       <span class="attr">— Anthropic Troubleshooting</span>
     </blockquote>
 
-    <p style="margin-top:1.5rem;"><strong>Polish-pass scaffold</strong> — type these in the first 90 seconds, every time:</p>
+    <p style="margin-top:1.5rem;"><strong>Polish-pass scaffold:</strong></p>
 <pre><code>MODEL = "claude-sonnet-4-6"
 SYSTEM_PROMPT = "..."
 
@@ -644,26 +644,26 @@ if __name__ == "__main__":
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Judgment</h3>
     <ul>
-      <li>Within the first few minutes, name the architectural choice.</li>
+      <li>Name the architectural choice early.</li>
     </ul>
     <div class="callout">This is workflow-shaped vs. agent-shaped — let me build the simpler thing first.</div>
-    <div class="callout">In prod I'd narrow the surface to typed intent tools — <code>get_revenue_by_country(country)</code> — never let the LLM write raw SQL. The trade is flexibility for safety.</div>
-    <p style="margin-top:0.8rem;">When you skip a tactic, name why. Skip-with-reasoning beats apply-without-thinking.</p>
+    <div class="callout">In prod I'd narrow the surface to typed intent tools — <code>get_revenue_by_country(country)</code> — never raw SQL. Trade flexibility for safety.</div>
+    <p style="margin-top:0.8rem;">Skip-with-reasoning beats apply-without-thinking.</p>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Shipping</h3>
     <ul>
-      <li><strong>Build minimal end-to-end first.</strong> Don't optimize before the loop runs.</li>
-      <li>Test after <em>each</em> tool added — not four tools then one run.</li>
-      <li><strong>Stub aggressively.</strong> Mutating actions return <code>{"id": "REF-XXX", "status": "issued"}</code>. Pretend it worked.</li>
+      <li><strong>Minimal end-to-end first.</strong></li>
+      <li>Test after <em>each</em> tool.</li>
+      <li><strong>Stub aggressively.</strong> Mutations return <code>{"id": "REF-XXX", "status": "issued"}</code>.</li>
     </ul>
 
-    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Legibility</h3>
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Communication</h3>
     <ul>
-      <li><strong>Read the starter end-to-end first.</strong> The inventory is the plan.</li>
-      <li>For every fix: 1–2 sentences of <em>why</em> — comment, commit message, or PR note. <em>"Doing X because [pattern from Anthropic docs / production reason]."</em></li>
-      <li>When stuck &gt;20s, default move: <em>read what the agent sent in the last turn.</em> The trace is the answer.</li>
+      <li><strong>Inventory the starter first.</strong> The inventory is the plan.</li>
+      <li>Every fix: 1–2 sentences of <em>why</em>. <em>"Doing X because [pattern / production reason]."</em></li>
+      <li>Stuck &gt;20s: read the last turn.</li>
     </ul>
-    <div class="callout">Schluntz &amp; Zhang's heuristic: start simple, add complexity only when simpler solutions fall short. That is the rule.</div>
+    <div class="callout">Schluntz &amp; Zhang: start simple, add complexity only when simpler solutions fall short.</div>
   </div>
 </section>
 
@@ -671,8 +671,8 @@ if __name__ == "__main__":
 <section>
   <div class="marker">§04<span class="label">Gotchas</span></div>
   <div>
-    <h2>Gotchas that actually trip people up.</h2>
-    <p class="lede">Not encyclopedic. The ones you keep hitting.</p>
+    <h2>Gotchas.</h2>
+    <p class="lede">The ones you keep hitting.</p>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Python · runtime</h3>
 
@@ -760,10 +760,10 @@ re.search(r"\d+", text)                <span class="c-comment"># → match obj o
   <div class="marker">§05<span class="label">Trace+Eval</span></div>
   <div>
     <h2>See the loop. Score the loop.</h2>
-    <p class="lede">Two helpers. Both fit on one screen. Both make the loop's state legible to anyone reading the run — including future-you.</p>
+    <p class="lede">Two helpers. The loop's state, legible at a glance.</p>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Logging — one line per block</h3>
-    <p>Print in <strong>two places only</strong>: after every <code>messages.create()</code>, and after every tool dispatch. Nothing else. The loop's <em>change</em> is fully described by what the model just said + what each tool returned. The <code>messages</code> array is cumulative state — don't dump it.</p>
+    <p>Print in <strong>two places</strong>: after <code>messages.create()</code> and after each dispatch.</p>
 
 <pre><code><span class="c-comment"># Loop-agnostic. Works for `for turn in range(N)`, `while stop_reason == "tool_use"`,</span>
 <span class="c-comment"># recursion, streaming, anything. The `── stop=... ──` line is the turn boundary.</span>
@@ -782,7 +782,7 @@ def log_result(name, result, is_error):
     glyph = "✗" if is_error else "✓"
     print(f"  {glyph}  {name}: {str(result)[:120]}")</code></pre>
 
-    <p style="margin-top:1rem;">Wire-in (two lines, anywhere in your loop):</p>
+    <p style="margin-top:1rem;"><strong>Wire-in:</strong></p>
 <pre><code><span class="c-comment"># wherever you call the model …</span>
 response = client.messages.create(...)
 <span class="c-good">log_response(response)</span>                              <span class="c-comment"># ← here</span>
@@ -791,19 +791,18 @@ response = client.messages.create(...)
 result, is_error = call_tool(name, tool_input)
 <span class="c-good">log_result(name, result, is_error)</span>                  <span class="c-comment"># ← and here</span></code></pre>
 
-    <p style="margin-top:0.8rem; font-size:0.92rem; color:var(--ink-soft);">If you want turn numbers, prepend them at the call site — keep loop-shape decisions out of the logger.</p>
+    <p style="margin-top:0.8rem; font-size:0.92rem; color:var(--ink-soft);">Want turn numbers? Prepend at the call site.</p>
 
-    <p style="margin-top:1rem;"><strong>Why these rules:</strong></p>
-    <ul>
-      <li><strong>One line per block</strong> — eyes scan vertically; glyph column lines up.</li>
-      <li><strong>Truncate to ~120 chars</strong> — a full SQL query or row dump destroys the trace.</li>
-      <li><strong>Glyphs over labels</strong> — <code>→</code> = call, <code>✓/✗</code> = result. Less text, more signal.</li>
-      <li><strong>Always print <code>stop_reason</code></strong> — single most important signal in the loop.</li>
-      <li><strong>Don't print the full <code>messages</code> array</strong> — it grows every turn. Trace change, not state.</li>
+    <ul style="margin-top:1rem;">
+      <li><strong>One line per block</strong> — glyph column lines up.</li>
+      <li><strong>Truncate to ~120 chars</strong> — SQL or row dumps destroy the trace.</li>
+      <li><strong>Glyphs over labels</strong> — <code>→</code> call, <code>✓/✗</code> result.</li>
+      <li><strong>Always print <code>stop_reason</code></strong> — biggest signal in the loop.</li>
+      <li><strong>Don't dump <code>messages</code></strong> — trace change, not state.</li>
     </ul>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.1rem;">Eval — 4 cases, substring match</h3>
-    <p>Run before declaring "done." One narrow eval pass beats no eval at all — and forces you to define what "working" means in writing.</p>
+    <p>Run before declaring "done." Forces you to write down what "working" means.</p>
 
 <pre><code>TESTS = [
     ("How many customers are from France?",       "2"),
@@ -827,7 +826,7 @@ def run_eval(tests):
         passed += ok
     print(f"── {passed}/{len(tests)} passed ──")</code></pre>
 
-    <p style="margin-top:1rem;"><strong>Don't oversell it.</strong> Substring match is a smoke test. The real thing is 5–10 verifiable prompts, tool-call counts and tokens logged per case, LLM-as-judge calibrated on the first 20 — that's the <em>Writing Tools for Agents</em> guidance. Name the gap; don't pretend it isn't there.</p>
+    <p style="margin-top:1rem;">Smoke test only. Real eval: 5–10 verifiable prompts, tool-call counts and tokens per case, LLM-as-judge calibrated on the first 20 — <em>Writing Tools for Agents</em>.</p>
   </div>
 </section>
 
@@ -836,7 +835,7 @@ def run_eval(tests):
   <div class="marker">§06<span class="label">Output</span></div>
   <div>
     <h2>Get structured output reliably.</h2>
-    <p class="lede">Define the shape as a tool. Include it alongside your other tools. The model calls it last — when it has the answer. Read <code>block.input</code>. No Pydantic, no parsing, no fences — the SDK delivers a dict that already conforms to your schema.</p>
+    <p class="lede">Schema as tool. Include with your other tools. Model calls it last. Read <code>block.input</code> — already a dict.</p>
 
 <pre><code>return_tool = {
     "name": "return_final_answer",
@@ -861,12 +860,12 @@ for block in response.content:
         result = <span class="c-good">block.input</span>     <span class="c-comment"># {"answer": ..., "confidence": 0.92, "sources": [...]}</span>
         return result</code></pre>
 
-    <p style="margin-top:1rem;"><strong>Gotchas, in order of how often they bite:</strong></p>
+    <p style="margin-top:1rem;"><strong>Gotchas:</strong></p>
     <ul>
-      <li><strong>Make the description on the tool earn its keep.</strong> "Call this exactly once when done" tells the model <em>when</em> — without it, the model may call the return-tool prematurely or never at all. Reinforce in the system prompt if you can.</li>
-      <li><strong><code>required</code> is doing the work.</strong> Anything not in <code>required</code> may be omitted by the model — even if it's described as essential. If a field matters, list it.</li>
-      <li><strong>The SDK validates shape, not semantics.</strong> <code>block.input["confidence"]</code> may be the right type and still out-of-range. Validate values you actually care about.</li>
-      <li><strong>Treat it like any other tool in the loop.</strong> If the model produces text-only or calls a different tool, you handle it the same way you'd handle any other turn — don't special-case the unhappy paths.</li>
+      <li><strong>Description does the work.</strong> "Call this exactly once when done" tells the model <em>when</em>. Reinforce in system prompt.</li>
+      <li><strong><code>required</code> is enforced.</strong> If a field matters, list it.</li>
+      <li><strong>Shape, not semantics.</strong> <code>confidence</code> may be the right type and out-of-range. Validate values you care about.</li>
+      <li><strong>Treat it like any other tool.</strong> Don't special-case unhappy paths.</li>
     </ul>
   </div>
 </section>
@@ -875,9 +874,9 @@ for block in response.content:
 <section>
   <div class="marker">§07<span class="label">Reference</span></div>
   <div>
-    <h2>Quick reference, for when memory fails.</h2>
+    <h2>Quick reference.</h2>
 
-    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">All <code>stop_reason</code> values to handle</h3>
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;"><code>stop_reason</code> values</h3>
 <pre><code>"end_turn"                        → done; return text
 "tool_use"                        → execute tools, append, continue
 "max_tokens"                      → truncated; re-issue with higher max_tokens
@@ -899,9 +898,8 @@ for block in response.content:
 {"type": "any"}                         <span class="c-comment"># MUST call some tool, model picks which</span>
 {"type": "tool", "name": "X"}           <span class="c-comment"># MUST call tool X this turn</span>
 {"type": "none"}                        <span class="c-comment"># cannot call any tool</span>
-<span class="c-comment"># Forcing is rare. The usual flow: include tools, let the model choose.</span>
-<span class="c-comment"># If you do force a specific tool, do it on the LAST turn only — forcing</span>
-<span class="c-comment"># mid-loop kills data-gathering steps.</span></code></pre>
+<span class="c-comment"># Forcing is rare. If you force, do it on the LAST turn only —</span>
+<span class="c-comment"># mid-loop kills data-gathering.</span></code></pre>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Troubleshooting · symptom → fix</h3>
     <table class="ref">
@@ -920,7 +918,7 @@ for block in response.content:
       </tbody>
     </table>
 
-    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Quotes worth internalizing</h3>
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Quotes</h3>
     <blockquote>
       Start simple, add complexity only when simpler solutions fall short.
       <span class="attr">— Schluntz &amp; Zhang</span>
@@ -956,23 +954,23 @@ for block in response.content:
   <div class="marker">§08<span class="label">Opening</span></div>
   <div>
     <h2>The 90-second opening move.</h2>
-    <p class="lede">When you're handed a vague brief and a timer, this is the script. Walk through it once — for yourself, in a comment block, in a standup, or in the PR description. Then code.</p>
+    <p class="lede">Vague brief, timer running. Walk this once — then code.</p>
 
     <div class="opening">
-      <p>Before I write anything, I'm going to read the starter end-to-end and inventory what's there — that surfaces what's missing.</p>
-      <p>[inventory: client setup, MODEL, example tools, dispatcher pattern, loop shape, which stop_reasons are handled, what error handling exists]</p>
-      <p>Plan: build [N] tools — [tool A], [tool B], maybe [tool C]. Read-only first, then mutating with preconditions. This is workflow-shaped enough that a single agentic loop is right — not reaching for routing or multi-agent. Open question before starting: [clarifier about the brief or the environment].</p>
-      <p>Build the minimal end-to-end with [tool A] first, iterate on the descriptions, then add the rest.</p>
+      <p>Read the starter end-to-end. Inventory what's there — surfaces what's missing.</p>
+      <p>[inventory: client, MODEL, example tools, dispatcher, loop shape, stop_reasons, error handling]</p>
+      <p>Plan: build [N] tools — [A], [B], maybe [C]. Read-only first, then mutating with preconditions. Workflow-shaped — single agentic loop, not routing or multi-agent. Open question: [clarifier].</p>
+      <p>Minimal end-to-end with [A], iterate descriptions, then add the rest.</p>
     </div>
 
-    <p>Ninety seconds. The discipline is: <em>read, inventory, plan, name one open question, then code.</em> Skipping any of the four costs you more time than it saves.</p>
+    <p>Ninety seconds. <em>Read, inventory, plan, ask, code.</em></p>
   </div>
 </section>
 
 <!-- ════════════════════════ COLOPHON ════════════════════════ -->
 <footer class="colophon">
   <span class="ornament">¶</span>
-  Set in Fraunces &amp; Public Sans · Code in JetBrains Mono · Rev. 02
+  Set in Fraunces &amp; Public Sans · Code in JetBrains Mono · Rev. 03 (tight)
 </footer>
 
 </body>
