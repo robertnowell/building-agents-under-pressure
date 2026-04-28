@@ -508,14 +508,14 @@
 
     <ol class="numbered">
       <li><strong>Read the problem fully.</strong> Don't skim. ~30 sec.</li>
-      <li><strong>Read the starter aloud</strong> (~90 sec). Narrate what's there <em>and</em> what's missing. Free signal across four axes.</li>
+      <li><strong>Read the starter end-to-end</strong> (~90 sec). Inventory what's there <em>and</em> what's missing — that becomes your plan.</li>
       <li><strong>Run it once.</strong> See the trace. Don't fix yet.</li>
-      <li><strong>State plan aloud</strong> (1–2 min). Architecture choice + 2–4 tools + workflow vs. agent.</li>
+      <li><strong>State the plan</strong> (1–2 min). Architecture choice + 2–4 tools + workflow vs. agent.</li>
       <li><strong>Build minimal end-to-end first.</strong> One tool, simplest path. Run.</li>
       <li><strong>Iterate on tool descriptions + system prompt</strong> before adding more tools.</li>
       <li><strong>Extend.</strong> More tools, edge cases, expansions.</li>
-      <li><strong>Add evals or mention them.</strong> <em>"In prod I'd add 5–10 verifiable test prompts with regression alerts."</em></li>
-      <li><strong>Discuss.</strong> Lead with what you'd do in prod that you're not doing here.</li>
+      <li><strong>Add evals or document them.</strong> <em>"In prod I'd add 5–10 verifiable test prompts with regression alerts."</em></li>
+      <li><strong>Wrap up.</strong> Name the gap between this and prod — what you stubbed, what you'd harden next.</li>
     </ol>
 
     <blockquote>
@@ -565,19 +565,19 @@
       <div class="axis">
         <div class="name">Judgment</div>
         <ul class="body">
-          <li>Workflow-vs-agent named explicitly at minute 3–8</li>
+          <li>Workflow-vs-agent named explicitly, early</li>
           <li>Parsimony — simplest thing first</li>
-          <li>Tradeoffs named aloud, not silently chosen</li>
+          <li>Tradeoffs surfaced, not silently chosen</li>
           <li>Prod-vs-demo distinctions made explicit</li>
         </ul>
       </div>
       <div class="axis">
-        <div class="name">Communication</div>
+        <div class="name">Legibility</div>
         <ul class="body">
-          <li>Continuous narration; sub-30-second silences</li>
-          <li>Read starter aloud at minute 0–3</li>
+          <li>Loud thinking — comments, commit messages, log lines</li>
           <li>Why-not-just-what for every fix</li>
-          <li>Engaged in discussion with prepared takes</li>
+          <li>Tradeoffs documented inline as you make them</li>
+          <li>Future-you (or a teammate) can pick up cold</li>
         </ul>
       </div>
     </div>
@@ -586,10 +586,10 @@
 
 <!-- ════════════════════════ §3 ════════════════════════ -->
 <section>
-  <div class="marker">§03<span class="label">Demo</span></div>
+  <div class="marker">§03<span class="label">Practice</span></div>
   <div>
-    <h2>How to demonstrate each axis.</h2>
-    <p class="lede">Each axis has a deploy line. Memorize the rhythm; improvise the words.</p>
+    <h2>The discipline behind each axis.</h2>
+    <p class="lede">Each axis has a default move. Make it automatic; then it's there when the timer is on.</p>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Safety <span style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--ink-soft); letter-spacing:0.1em; margin-left:0.6rem;">// HIGH-LEVERAGE</span></h3>
     <ul>
@@ -643,11 +643,11 @@ if __name__ == "__main__":
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Judgment</h3>
     <ul>
-      <li>Minute 3–8: name the architectural choice.</li>
+      <li>Within the first few minutes, name the architectural choice.</li>
     </ul>
     <div class="callout">This is workflow-shaped vs. agent-shaped — let me build the simpler thing first.</div>
     <div class="callout">In prod I'd narrow the surface to typed intent tools — <code>get_revenue_by_country(country)</code> — never let the LLM write raw SQL. The trade is flexibility for safety.</div>
-    <p style="margin-top:0.8rem;">When briefed on a tactic, name when you'd skip it. Skip-with-reasoning scores higher than apply-without-thinking.</p>
+    <p style="margin-top:0.8rem;">When you skip a tactic, name why. Skip-with-reasoning beats apply-without-thinking.</p>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Shipping</h3>
     <ul>
@@ -656,13 +656,13 @@ if __name__ == "__main__":
       <li><strong>Stub aggressively.</strong> Mutating actions return <code>{"id": "REF-XXX", "status": "issued"}</code>. Pretend it worked.</li>
     </ul>
 
-    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Communication</h3>
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Legibility</h3>
     <ul>
-      <li><strong>Read starter aloud at minute 0–3.</strong> Free signal across four axes.</li>
-      <li>For every fix: 1–2 sentences of <em>why</em>. <em>"I'm doing X because [pattern from anthropic docs / production reason]."</em></li>
-      <li>When stuck &gt;20s: <em>"Let me read what the agent sent in the last turn."</em></li>
+      <li><strong>Read the starter end-to-end first.</strong> The inventory is the plan.</li>
+      <li>For every fix: 1–2 sentences of <em>why</em> — comment, commit message, or PR note. <em>"Doing X because [pattern from Anthropic docs / production reason]."</em></li>
+      <li>When stuck &gt;20s, default move: <em>read what the agent sent in the last turn.</em> The trace is the answer.</li>
     </ul>
-    <div class="callout">As Schluntz and Zhang put it — start simple, add complexity only when simpler solutions fall short. That's the heuristic I live by at Kopi.</div>
+    <div class="callout">Schluntz &amp; Zhang's heuristic: start simple, add complexity only when simpler solutions fall short. That is the rule.</div>
   </div>
 </section>
 
@@ -690,7 +690,7 @@ next(b.text for b in content if b.type == "text")        <span class="c-warn"># 
 <span class="c-warn"># IS_ERROR SEMANTICS — DO NOT INVERT</span>
 return result, False              <span class="c-good"># success</span>
 return error_msg, True            <span class="c-warn"># error</span>
-<span class="c-comment"># Narrate aloud: "Returning success-data with is_error=False"</span>
+<span class="c-comment"># Sanity-check by saying it: "success data, is_error=False"</span>
 
 <span class="c-warn"># KWARGS UNPACKING — SCHEMA PROPS MUST MATCH FUNCTION PARAMS</span>
 schema: {"properties": {"query": {"type": "string"}}}
@@ -725,7 +725,7 @@ re.search(r"\d+", text)                <span class="c-comment"># → match obj o
   <div class="marker">§05<span class="label">Trace+Eval</span></div>
   <div>
     <h2>See the loop. Score the loop.</h2>
-    <p class="lede">Two helpers. Both fit on one screen. Both visible to the interviewer as you build.</p>
+    <p class="lede">Two helpers. Both fit on one screen. Both make the loop's state legible to anyone reading the run — including future-you.</p>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Logging — one line per block</h3>
     <p>Print in <strong>two places only</strong>: after every <code>messages.create()</code>, and after every dispatch. Nothing else. The loop's <em>change</em> is fully described by what the model just said + what each tool returned. The <code>messages</code> array is cumulative state — don't dump it.</p>
@@ -768,7 +768,7 @@ def log_result(name, result, is_error):
     </ul>
 
     <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.1rem;">Eval — 4 cases, substring match</h3>
-    <p>If 5 minutes remain, this is the bonus that lands. Run it before saying "done."</p>
+    <p>Run before declaring "done." One narrow eval pass beats no eval at all — and forces you to define what "working" means in writing.</p>
 
 <pre><code>TESTS = [
     ("How many customers are from France?",       "2"),
@@ -792,7 +792,7 @@ def run_eval(tests):
         passed += ok
     print(f"── {passed}/{len(tests)} passed ──")</code></pre>
 
-    <p style="margin-top:1rem;"><strong>Say aloud while it runs:</strong> <em>"Substring match is a smoke test. Real eval is 5–10 verifiable prompts, log tool-call counts and tokens per case, LLM-as-judge calibrated on the first 20 — that's the </em>Writing Tools for Agents<em> guidance."</em> One sentence. Then move on.</p>
+    <p style="margin-top:1rem;"><strong>Don't oversell it.</strong> Substring match is a smoke test. The real thing is 5–10 verifiable prompts, tool-call counts and tokens logged per case, LLM-as-judge calibrated on the first 20 — that's the <em>Writing Tools for Agents</em> guidance. Name the gap; don't pretend it isn't there.</p>
   </div>
 </section>
 
@@ -836,7 +836,7 @@ def run_eval(tests):
       </tbody>
     </table>
 
-    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Quotes to deploy <em>once</em></h3>
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Quotes worth internalizing</h3>
     <blockquote>
       Start simple, add complexity only when simpler solutions fall short.
       <span class="attr">— Schluntz &amp; Zhang</span>
@@ -864,10 +864,6 @@ def run_eval(tests):
       <li>Stack Overflow (blank)</li>
     </ol>
 
-    <div class="banned">
-      <strong>Banned during the session</strong>
-      Claude.ai · Cursor · Copilot · ChatGPT · any AI assistant. Quit them all before joining. The activity indicator on CodeSignal surfaces window-switching — keep tabs you need on a separate window.
-    </div>
   </div>
 </section>
 
@@ -876,16 +872,16 @@ def run_eval(tests):
   <div class="marker">§07<span class="label">Opening</span></div>
   <div>
     <h2>The 90-second opening move.</h2>
-    <p class="lede">When the brief is done, this is the script. Walk through it; then code.</p>
+    <p class="lede">When you're handed a vague brief and a timer, this is the script. Walk through it once — for yourself, in a comment block, in a standup, or in the PR description. Then code.</p>
 
     <div class="opening">
-      <p>Got it. Before I start coding, let me read the starter end-to-end and tell you what I see — that'll also tell us what's missing.</p>
-      <p>[narrate aloud: client setup, MODEL, example tools, dispatcher pattern, loop shape, what stop_reasons it handles, what error handling exists]</p>
-      <p>Plan: I'll build [N] tools — [tool A], [tool B], maybe [tool C]. Read-only first, then mutating with preconditions. This is workflow-shaped enough that a single agentic loop is right — I wouldn't reach for routing or multi-agent here. One question before I start: [clarifying Q about the brief or the env].</p>
-      <p>Let me build the minimal end-to-end with [tool A] first, then iterate on the descriptions before adding the rest.</p>
+      <p>Before I write anything, I'm going to read the starter end-to-end and inventory what's there — that surfaces what's missing.</p>
+      <p>[inventory: client setup, MODEL, example tools, dispatcher pattern, loop shape, which stop_reasons are handled, what error handling exists]</p>
+      <p>Plan: build [N] tools — [tool A], [tool B], maybe [tool C]. Read-only first, then mutating with preconditions. This is workflow-shaped enough that a single agentic loop is right — not reaching for routing or multi-agent. Open question before starting: [clarifier about the brief or the environment].</p>
+      <p>Build the minimal end-to-end with [tool A] first, iterate on the descriptions, then add the rest.</p>
     </div>
 
-    <p>Ninety seconds. Hits all four non-Shipping axes simultaneously. Then code.</p>
+    <p>Ninety seconds. The discipline is: <em>read, inventory, plan, name one open question, then code.</em> Skipping any of the four costs you more time than it saves.</p>
   </div>
 </section>
 
