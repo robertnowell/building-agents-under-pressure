@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Agents Under Pressure</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23c54a1c'/><path d='M8 10l8 6-8 6' stroke='%23f4efe2' stroke-width='3' fill='none' stroke-linecap='square' stroke-linejoin='miter'/><rect x='18' y='20' width='8' height='2.5' fill='%23f4efe2'/></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,500;1,9..144,700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper:    #f4efe2;
+    --paper-2:  #ebe5d4;
+    --ink:      #181715;
+    --ink-soft: #524f48;
+    --accent:   #c54a1c;   /* burnt vermillion */
+    --accent-2: #f4e0d2;
+    --section:  #1a2e4d;   /* indigo */
+    --rule:     #181715;
+    --code-bg:  #e8e2d0;
+    --warn:     #b8311e;
+    --good:     #2c5d3a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+  ::selection { background: var(--ink); color: var(--paper); }
+
+  body {
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(197, 74, 28, 0.04) 0%, transparent 35%),
+      radial-gradient(circle at 88% 90%, rgba(26, 46, 77, 0.04) 0%, transparent 40%);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: 'Public Sans', sans-serif;
+    font-weight: 400;
+    line-height: 1.55;
+    font-feature-settings: "ss01", "kern";
+    padding: 4rem 5rem 8rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    overflow-x: hidden;
+  }
+
+  /* ───────── MASTHEAD ───────── */
+  .masthead {
+    border-top: 4px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding: 2rem 0 2.5rem;
+    margin-bottom: 4rem;
+    position: relative;
+    animation: rise 0.8s ease-out both;
+  }
+  .masthead .meta-top {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+  }
+  .masthead .meta-top .vol { color: var(--accent); }
+  .masthead h1 {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: "opsz" 144, "SOFT" 100;
+    font-weight: 700;
+    font-size: clamp(2.5rem, 6.5vw, 5.5rem);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    margin: 0;
+  }
+  .masthead h1 em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .masthead .subtitle {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(1.05rem, 1.7vw, 1.4rem);
+    margin-top: 1.5rem;
+    color: var(--ink-soft);
+    max-width: 50ch;
+    line-height: 1.4;
+  }
+  .masthead .ornament {
+    position: absolute;
+    top: 2rem;
+    right: 0;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 6rem;
+    color: var(--accent);
+    line-height: 0.8;
+    opacity: 0.18;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* ───────── SECTIONS ───────── */
+  section {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 2.5rem;
+    margin: 3.5rem 0;
+    padding-top: 2.5rem;
+    border-top: 1px solid var(--ink);
+    animation: rise 0.6s ease-out both;
+  }
+  section .marker {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 4.5rem;
+    line-height: 0.85;
+    color: var(--accent);
+    text-align: right;
+    padding-top: 0.2rem;
+  }
+  section .marker .label {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin-top: 0.5rem;
+  }
+  section h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: clamp(1.5rem, 2.6vw, 2.2rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.2rem;
+    max-width: 32ch;
+  }
+  section .lede {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-bottom: 1.2rem;
+    font-size: 1.05rem;
+  }
+
+  /* ───────── PROSE ───────── */
+  p { margin: 0.7rem 0; max-width: 70ch; }
+  strong { color: var(--ink); font-weight: 700; }
+
+  /* ───────── ORDERED LIST WITH NUMBERS ───────── */
+  ol.numbered {
+    list-style: none;
+    padding-left: 0;
+    counter-reset: item;
+  }
+  ol.numbered > li {
+    counter-increment: item;
+    padding-left: 3.5rem;
+    position: relative;
+    margin: 0.85rem 0;
+  }
+  ol.numbered > li::before {
+    content: counter(item, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 0.05rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+
+  ul { padding-left: 1.3rem; }
+  ul li { margin: 0.4rem 0; }
+  ul li::marker { color: var(--accent); }
+
+  /* ───────── CODE ───────── */
+  code, pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-feature-settings: "ss02";
+  }
+  :not(pre) > code {
+    background: var(--code-bg);
+    padding: 0.05em 0.4em;
+    border-radius: 0;
+    font-size: 0.88em;
+    border-bottom: 1px dotted var(--ink-soft);
+  }
+  pre {
+    background: var(--ink);
+    color: var(--paper);
+    border-left: 4px solid var(--accent);
+    padding: 1.5rem 1.75rem;
+    overflow-x: auto;
+    font-size: 0.83rem;
+    line-height: 1.55;
+    margin: 1.25rem 0;
+    position: relative;
+  }
+  pre code { background: none; padding: 0; border: none; }
+  pre .c-warn { color: #f8b88a; font-weight: 700; }
+  pre .c-good { color: #a8d8b8; }
+  pre .c-comment { color: #a39d8b; font-style: italic; }
+
+  /* ───────── BLOCKQUOTE / PULL QUOTE ───────── */
+  blockquote {
+    background: var(--accent-2);
+    border-left: 4px solid var(--accent);
+    padding: 1.4rem 2rem 1.4rem 3.5rem;
+    margin: 1.5rem 0;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 1.1rem;
+    line-height: 1.45;
+    position: relative;
+    color: var(--ink);
+  }
+  blockquote::before {
+    content: "“";
+    position: absolute;
+    font-family: 'Fraunces', serif;
+    font-style: normal;
+    font-weight: 700;
+    font-size: 4.5rem;
+    top: -0.4rem;
+    left: 0.7rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+  blockquote .attr {
+    display: block;
+    margin-top: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-style: normal;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* ───────── CALLOUT (deploy line) ───────── */
+  .callout {
+    border: 1.5px solid var(--ink);
+    padding: 1.5rem 2rem;
+    margin: 1.25rem 0;
+    background: var(--paper);
+    position: relative;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 1.04rem;
+    line-height: 1.5;
+  }
+  .callout::before {
+    content: "DEPLOY";
+    position: absolute;
+    top: -0.65rem;
+    left: 1.5rem;
+    background: var(--accent);
+    color: var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-style: normal;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    padding: 0.2rem 0.7rem;
+    font-weight: 700;
+  }
+
+  /* ───────── OPENING MOVE PANEL ───────── */
+  .opening {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 2.5rem 3rem 2.7rem;
+    margin: 1.5rem 0;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.1rem;
+    line-height: 1.55;
+    position: relative;
+    border-left: 4px solid var(--accent);
+  }
+  .opening::before {
+    content: "← OPEN";
+    position: absolute;
+    top: 1.2rem;
+    right: 1.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-style: normal;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .opening p { margin: 0.8rem 0; max-width: none; }
+
+  /* ───────── AXIS TABLE ───────── */
+  .axes {
+    border-top: 2px solid var(--ink);
+    border-bottom: 2px solid var(--ink);
+    margin: 1.5rem 0;
+  }
+  .axis {
+    display: grid;
+    grid-template-columns: 175px 1fr;
+    gap: 1.5rem;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid #c8c2b0;
+    align-items: start;
+  }
+  .axis:last-child { border-bottom: none; }
+  .axis .name {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding-top: 0.1rem;
+  }
+  .axis ul.body {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.97rem;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .axis ul.body li {
+    position: relative;
+    padding-left: 1.4rem;
+    margin: 0.3rem 0;
+  }
+  .axis ul.body li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    top: -0.05rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* ───────── REFERENCE TABLE ───────── */
+  table.ref {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.92rem;
+  }
+  table.ref th {
+    text-align: left;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    padding: 0.6rem 1rem;
+  }
+  table.ref td {
+    padding: 0.55rem 1rem;
+    border-bottom: 1px solid #c8c2b0;
+    vertical-align: top;
+  }
+  table.ref tr:hover td { background: var(--accent-2); }
+
+  /* ───────── HEURISTIC LINE ───────── */
+  .heuristic {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    background: var(--paper-2);
+    padding: 1rem 1.3rem;
+    border-left: 3px solid var(--ink);
+    margin-top: 1rem;
+  }
+  .heuristic strong {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.78rem;
+  }
+
+  /* ───────── LINKS ───────── */
+  a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1.5px solid var(--accent);
+    transition: background 0.15s ease;
+  }
+  a:hover { background: var(--accent-2); }
+
+  /* ───────── BANNED BANNER ───────── */
+  .banned {
+    background: var(--warn);
+    color: var(--paper);
+    padding: 1rem 1.5rem;
+    margin: 1rem 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1.4;
+    border: 2px solid var(--warn);
+  }
+  .banned strong {
+    color: var(--paper);
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+  }
+
+  /* ───────── COLOPHON ───────── */
+  .colophon {
+    margin-top: 5rem;
+    padding-top: 2rem;
+    border-top: 4px double var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+  .colophon .ornament {
+    color: var(--accent);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  /* ───────── ANIMATION ───────── */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  section:nth-of-type(1) { animation-delay: 0.05s; }
+  section:nth-of-type(2) { animation-delay: 0.10s; }
+  section:nth-of-type(3) { animation-delay: 0.15s; }
+  section:nth-of-type(4) { animation-delay: 0.20s; }
+  section:nth-of-type(5) { animation-delay: 0.25s; }
+  section:nth-of-type(6) { animation-delay: 0.30s; }
+
+  /* ───────── RESPONSIVE ───────── */
+  @media (max-width: 720px) {
+    body { padding: 2rem 1.5rem 4rem; }
+    section { grid-template-columns: 1fr; gap: 0.8rem; }
+    section .marker { text-align: left; font-size: 3rem; }
+    .masthead .ornament { display: none; }
+    .axis { grid-template-columns: 1fr; gap: 0.4rem; }
+  }
+
+  /* ───────── PRINT ───────── */
+  @media print {
+    body {
+      background: white;
+      background-image: none;
+      padding: 0.5in;
+      max-width: none;
+      font-size: 10.5px;
+      color: black;
+    }
+    section { page-break-inside: avoid; animation: none; }
+    pre { background: #1a1a1a !important; color: #f4efe2 !important; font-size: 9px; }
+    .opening { background: #1a1a1a !important; color: #f4efe2 !important; }
+    .banned { background: #b8311e !important; color: white !important; }
+    a { border-bottom: none; color: black; }
+    .masthead .ornament { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════ MASTHEAD ════════════════════════ -->
+<header class="masthead">
+  <div class="meta-top">
+    <span>A FIELD MANUAL</span>
+    <span class="vol">VOL. 01 / 2026</span>
+  </div>
+  <h1>Building Agents<br>Under <em>Pressure</em>.</h1>
+  <p class="subtitle">A reference for the patterns that hold up<br>when the timer is on.</p>
+  <span class="ornament">¶</span>
+</header>
+
+<!-- ════════════════════════ §1 ════════════════════════ -->
+<section>
+  <div class="marker">§01<span class="label">Process</span></div>
+  <div>
+    <h2>The build order, in sequence.</h2>
+    <p class="lede">From Anthropic's five-ring tutorial &amp; the <em>writing-tools-for-agents</em> blog. Follow the order; resist the urge to leap ahead.</p>
+
+    <ol class="numbered">
+      <li><strong>Read the problem fully.</strong> Don't skim. ~30 sec.</li>
+      <li><strong>Read the starter aloud</strong> (~90 sec). Narrate what's there <em>and</em> what's missing. Free signal across four axes.</li>
+      <li><strong>Run it once.</strong> See the trace. Don't fix yet.</li>
+      <li><strong>State plan aloud</strong> (1–2 min). Architecture choice + 2–4 tools + workflow vs. agent.</li>
+      <li><strong>Build minimal end-to-end first.</strong> One tool, simplest path. Run.</li>
+      <li><strong>Iterate on tool descriptions + system prompt</strong> before adding more tools.</li>
+      <li><strong>Extend.</strong> More tools, edge cases, expansions.</li>
+      <li><strong>Add evals or mention them.</strong> <em>"In prod I'd add 5–10 verifiable test prompts with regression alerts."</em></li>
+      <li><strong>Discuss.</strong> Lead with what you'd do in prod that you're not doing here.</li>
+    </ol>
+
+    <blockquote>
+      Start with simple prompts, optimize them with comprehensive evaluation, and add multi-step agentic systems only when simpler solutions fall short.
+      <span class="attr">— Schluntz &amp; Zhang · Building Effective Agents</span>
+    </blockquote>
+  </div>
+</section>
+
+<!-- ════════════════════════ §2 ════════════════════════ -->
+<section>
+  <div class="marker">§02<span class="label">Axes</span></div>
+  <div>
+    <h2>The five axes that matter.</h2>
+    <p class="lede">What separates a working agent from a polished one. Track these independently as you build.</p>
+
+    <div class="axes">
+      <div class="axis">
+        <div class="name">Shipping</div>
+        <ul class="body">
+          <li>Code runs end-to-end</li>
+          <li>Test query returns the right answer</li>
+          <li>Stubbed where building the real thing isn't the point</li>
+          <li>Used the time budget; didn't run over</li>
+        </ul>
+      </div>
+      <div class="axis">
+        <div class="name">Safety</div>
+        <ul class="body">
+          <li>Read-only by default</li>
+          <li>Preconditions on mutating actions</li>
+          <li><code>is_error</code> wired through the dispatcher</li>
+          <li>Idempotency on mutating actions</li>
+          <li>Refusal paths under uncertainty</li>
+        </ul>
+      </div>
+      <div class="axis">
+        <div class="name">Craft</div>
+        <ul class="body">
+          <li>Tool descriptions ACI-quality (3–4 sentences, when-NOT-to-use, examples)</li>
+          <li>Real system prompt — named role + workflow + format</li>
+          <li><code>max_turns</code> safety guard</li>
+          <li>Structured returns (<code>dict</code> not <code>tuple</code>)</li>
+          <li>Schema constraints honored — props match function params</li>
+        </ul>
+      </div>
+      <div class="axis">
+        <div class="name">Judgment</div>
+        <ul class="body">
+          <li>Workflow-vs-agent named explicitly at minute 3–8</li>
+          <li>Parsimony — simplest thing first</li>
+          <li>Tradeoffs named aloud, not silently chosen</li>
+          <li>Prod-vs-demo distinctions made explicit</li>
+        </ul>
+      </div>
+      <div class="axis">
+        <div class="name">Communication</div>
+        <ul class="body">
+          <li>Continuous narration; sub-30-second silences</li>
+          <li>Read starter aloud at minute 0–3</li>
+          <li>Why-not-just-what for every fix</li>
+          <li>Engaged in discussion with prepared takes</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════ §3 ════════════════════════ -->
+<section>
+  <div class="marker">§03<span class="label">Demo</span></div>
+  <div>
+    <h2>How to demonstrate each axis.</h2>
+    <p class="lede">Each axis has a deploy line. Memorize the rhythm; improvise the words.</p>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Safety <span style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--ink-soft); letter-spacing:0.1em; margin-left:0.6rem;">// HIGH-LEVERAGE</span></h3>
+    <ul>
+      <li><strong>Look at mutating tools first.</strong> Add precondition check + idempotency.</li>
+    </ul>
+    <div class="callout">Defense should live in the tool itself, not the prompt — prompts are soft guards. For DB tools: read-only at the DB layer (<code>?mode=ro</code>), not just a Python check.</div>
+    <div class="callout">In prod, <code>issue_refund</code> / <code>notify</code> / <code>cancel</code> should be idempotent on <code>order_id</code> / <code>message_hash</code> / <code>customer_id</code> to prevent double-action from loop retries.</div>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Craft</h3>
+    <ul>
+      <li>Tool descriptions: <strong>3–4 sentences</strong>, explicit when-NOT-to-use, schema embedded for DB tools, examples in param descriptions.</li>
+      <li>Returns: <code>list[dict]</code> not <code>list[tuple]</code>. Semantic IDs &gt; UUIDs.</li>
+    </ul>
+    <blockquote>
+      Differentiate tools by WHEN to use them, not only WHAT they do.
+      <span class="attr">— Anthropic Troubleshooting</span>
+    </blockquote>
+
+    <p style="margin-top:1.5rem;"><strong>Polish-pass scaffold</strong> — type these in the first 90 seconds, every time:</p>
+<pre><code>MODEL = "claude-sonnet-4-6"
+SYSTEM_PROMPT = "..."
+
+def call_tool(name, tool_input) -&gt; tuple[str, bool]:
+    fn = TOOL_FUNCTIONS.get(name)
+    if fn is None: return f"unknown tool: {name}", True
+    try:    return fn(**tool_input), False
+    except Exception as e: return f"{type(e).__name__}: {e}", True
+
+def run_agent(query: str, max_turns: int = 10) -&gt; str:
+    messages = [{"role": "user", "content": query}]
+    for turn in range(max_turns):
+        response = client.messages.create(model=MODEL, max_tokens=4096,
+                                          system=SYSTEM_PROMPT, tools=tools, messages=messages)
+        if response.stop_reason == "end_turn":
+            return next((b.text for b in response.content if b.type == "text"), "")
+        if response.stop_reason == "tool_use":
+            messages.append({"role": "assistant", "content": response.content})
+            tool_results = []
+            for block in response.content:
+                if block.type == "tool_use":
+                    content, is_error = call_tool(block.name, block.input)
+                    tool_results.append({"type": "tool_result", "tool_use_id": block.id,
+                                         "content": str(content), "is_error": is_error})
+            messages.append({"role": "user", "content": tool_results})
+            continue
+        return f"[unexpected stop_reason: {response.stop_reason}]"
+    return "[max_turns reached]"
+
+if __name__ == "__main__":
+    print(run_agent("..."))</code></pre>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Judgment</h3>
+    <ul>
+      <li>Minute 3–8: name the architectural choice.</li>
+    </ul>
+    <div class="callout">This is workflow-shaped vs. agent-shaped — let me build the simpler thing first.</div>
+    <div class="callout">In prod I'd narrow the surface to typed intent tools — <code>get_revenue_by_country(country)</code> — never let the LLM write raw SQL. The trade is flexibility for safety.</div>
+    <p style="margin-top:0.8rem;">When briefed on a tactic, name when you'd skip it. Skip-with-reasoning scores higher than apply-without-thinking.</p>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Shipping</h3>
+    <ul>
+      <li><strong>Build minimal end-to-end first.</strong> Don't optimize before the loop runs.</li>
+      <li>Test after <em>each</em> tool added — not four tools then one run.</li>
+      <li><strong>Stub aggressively.</strong> Mutating actions return <code>{"id": "REF-XXX", "status": "issued"}</code>. Pretend it worked.</li>
+    </ul>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:2rem; margin-bottom:0.5rem; font-size:1.15rem;">Communication</h3>
+    <ul>
+      <li><strong>Read starter aloud at minute 0–3.</strong> Free signal across four axes.</li>
+      <li>For every fix: 1–2 sentences of <em>why</em>. <em>"I'm doing X because [pattern from anthropic docs / production reason]."</em></li>
+      <li>When stuck &gt;20s: <em>"Let me read what the agent sent in the last turn."</em></li>
+    </ul>
+    <div class="callout">As Schluntz and Zhang put it — start simple, add complexity only when simpler solutions fall short. That's the heuristic I live by at Kopi.</div>
+  </div>
+</section>
+
+<!-- ════════════════════════ §4 ════════════════════════ -->
+<section>
+  <div class="marker">§04<span class="label">Gotchas</span></div>
+  <div>
+    <h2>Python traps that actually trip people up.</h2>
+    <p class="lede">Not encyclopedic. The ones you keep hitting.</p>
+
+<pre><code><span class="c-warn"># DICT vs OBJECT ACCESS</span>
+block.input["title"]              <span class="c-good"># ✓</span>  block is SDK obj (dot), input is dict (brackets)
+block.input.title                 <span class="c-warn"># ✗</span>  AttributeError
+<span class="c-comment"># Mental model: SDK metadata = dot. JSON payload = brackets.</span>
+
+<span class="c-warn"># PRINTING SDK OBJECTS</span>
+print(f"x: {x}")                  <span class="c-good"># ✓</span>  always works (uses __repr__)
+json.dumps(response.content)      <span class="c-warn"># ✗</span>  TypeError on Pydantic blocks
+[b.model_dump() for b in blocks]  <span class="c-good"># ✓</span>  if you need real JSON
+
+<span class="c-warn"># NEXT() WITHOUT FALLBACK</span>
+next((b.text for b in content if b.type == "text"), "")  <span class="c-good"># ✓ default value</span>
+next(b.text for b in content if b.type == "text")        <span class="c-warn"># ✗ StopIteration</span>
+
+<span class="c-warn"># IS_ERROR SEMANTICS — DO NOT INVERT</span>
+return result, False              <span class="c-good"># success</span>
+return error_msg, True            <span class="c-warn"># error</span>
+<span class="c-comment"># Narrate aloud: "Returning success-data with is_error=False"</span>
+
+<span class="c-warn"># KWARGS UNPACKING — SCHEMA PROPS MUST MATCH FUNCTION PARAMS</span>
+schema: {"properties": {"query": {"type": "string"}}}
+fn(**block.input)                 <span class="c-comment"># → fn(query="...")</span>
+def fn(query: str)                <span class="c-good"># ✓ matches</span>
+def fn(expr: str)                 <span class="c-warn"># ✗ TypeError</span>
+
+<span class="c-warn"># TUPLE vs DICT RETURNS FROM TOOLS</span>
+return [(start, end), ...]        <span class="c-warn"># ✗ model guesses positions</span>
+return [{"start": s, "end": e}]   <span class="c-good"># ✓ named fields</span>
+
+<span class="c-warn"># WHILE vs FOR(RANGE) FOR LOOPS</span>
+while response.stop_reason == "tool_use":  <span class="c-warn"># ✗ no max_turns</span>
+for turn in range(max_turns):              <span class="c-good"># ✓ bounded</span>
+
+<span class="c-warn"># STRING COMPARISON ON TIMES — only safe with zero-padding!</span>
+"11:00" &lt; "2:00"   <span class="c-warn"># → True</span>  (because '1' &lt; '2' lexicographically — WRONG)
+<span class="c-comment"># Use minutes-since-midnight: int(h)*60 + int(m), THEN compare.</span></code></pre>
+
+    <p style="margin-top:1.5rem;"><strong>Stdlib likely needed</strong> — memorize the call:</p>
+<pre><code>time.time()                            <span class="c-comment"># → float seconds since epoch</span>
+from datetime import datetime, timedelta
+datetime.now() - last_t                <span class="c-comment"># → timedelta</span>
+hash((message, severity))              <span class="c-comment"># → int (in-process dedup OK)</span>
+json.dumps(obj, default=str)           <span class="c-comment"># → fallback for non-serializable</span>
+re.search(r"\d+", text)                <span class="c-comment"># → match obj or None</span></code></pre>
+  </div>
+</section>
+
+<!-- ════════════════════════ §5 ════════════════════════ -->
+<section>
+  <div class="marker">§05<span class="label">Reference</span></div>
+  <div>
+    <h2>Quick reference, for when memory fails.</h2>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">All <code>stop_reason</code> values to handle</h3>
+<pre><code>"end_turn"                        → done; return text
+"tool_use"                        → execute tools, append, continue
+"max_tokens"                      → truncated; re-issue with higher max_tokens
+"pause_turn"                      → server tool iteration cap; re-send as-is
+"stop_sequence"                   → rare; treat as end_turn
+"refusal"                         → safety; return refusal text
+"model_context_window_exceeded"   → terminal; return error</code></pre>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;"><code>tool_result</code> block — required shape</h3>
+<pre><code>{
+    "type": "tool_result",
+    "tool_use_id": block.id,   <span class="c-comment"># MUST match the tool_use id</span>
+    "content": str(result),    <span class="c-comment"># or list of {type:"text", text:...}</span>
+    "is_error": is_error,      <span class="c-comment"># bool — wire through dispatcher</span>
+}</code></pre>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Anthropic troubleshooting · symptom → fix</h3>
+    <table class="ref">
+      <thead>
+        <tr><th>Symptom</th><th>Fix</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Wrong tool selected</td><td>Sharpen descriptions: <em>WHEN, not WHAT</em></td></tr>
+        <tr><td>Tool never called</td><td>Check duplicate names; add <code>input_examples</code></td></tr>
+        <tr><td>Wrong param types</td><td>Add <code>"strict": True</code> or <code>input_examples</code></td></tr>
+        <tr><td>Invented param</td><td>Add <code>"strict": True</code></td></tr>
+        <tr><td>Sequential when parallel expected</td><td>Send <em>all</em> <code>tool_results</code> in <em>one</em> user message</td></tr>
+        <tr><td>Empty response after tool_result</td><td>Don't add text block right after; append a new user message</td></tr>
+        <tr><td><code>max_tokens</code> mid-tool_use</td><td>Retry with higher <code>max_tokens</code>; don't submit partial</td></tr>
+        <tr><td><code>disable_parallel_tool_use</code> ignored</td><td>Set on the request that <em>returns</em> tool_use, not later</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Quotes to deploy <em>once</em></h3>
+    <blockquote>
+      Start simple, add complexity only when simpler solutions fall short.
+      <span class="attr">— Schluntz &amp; Zhang</span>
+    </blockquote>
+    <blockquote>
+      Differentiate tools by WHEN to use them, not only WHAT they do.
+      <span class="attr">— Anthropic Troubleshooting</span>
+    </blockquote>
+    <blockquote>
+      Even small refinements to tool descriptions can yield dramatic improvements.
+      <span class="attr">— Writing Tools for Agents</span>
+    </blockquote>
+    <blockquote>
+      Maintain simplicity. Prioritize transparency. Carefully craft your agent-computer interface (ACI) through thorough tool documentation and testing.
+      <span class="attr">— Building Effective Agents</span>
+    </blockquote>
+
+    <h3 style="font-family:'Fraunces',serif; font-weight:700; margin-top:1.5rem; margin-bottom:0.5rem; font-size:1.1rem;">Tabs to keep open</h3>
+    <ol class="numbered">
+      <li><a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/build-a-tool-using-agent" target="_blank">build-a-tool-using-agent</a> — the five-ring tutorial</li>
+      <li><a href="https://docs.anthropic.com/en/api/handling-stop-reasons" target="_blank">handling-stop-reasons</a></li>
+      <li><a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/troubleshooting-tool-use" target="_blank">troubleshooting-tool-use</a></li>
+      <li><a href="https://www.anthropic.com/engineering/writing-tools-for-agents" target="_blank">writing-tools-for-agents</a> — the blog</li>
+      <li>This manual</li>
+      <li>Stack Overflow (blank)</li>
+    </ol>
+
+    <div class="banned">
+      <strong>Banned during the session</strong>
+      Claude.ai · Cursor · Copilot · ChatGPT · any AI assistant. Quit them all before joining. The activity indicator on CodeSignal surfaces window-switching — keep tabs you need on a separate window.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════ §6 ════════════════════════ -->
+<section>
+  <div class="marker">§06<span class="label">Opening</span></div>
+  <div>
+    <h2>The 90-second opening move.</h2>
+    <p class="lede">When the brief is done, this is the script. Walk through it; then code.</p>
+
+    <div class="opening">
+      <p>Got it. Before I start coding, let me read the starter end-to-end and tell you what I see — that'll also tell us what's missing.</p>
+      <p>[narrate aloud: client setup, MODEL, example tools, dispatcher pattern, loop shape, what stop_reasons it handles, what error handling exists]</p>
+      <p>Plan: I'll build [N] tools — [tool A], [tool B], maybe [tool C]. Read-only first, then mutating with preconditions. This is workflow-shaped enough that a single agentic loop is right — I wouldn't reach for routing or multi-agent here. One question before I start: [clarifying Q about the brief or the env].</p>
+      <p>Let me build the minimal end-to-end with [tool A] first, then iterate on the descriptions before adding the rest.</p>
+    </div>
+
+    <p>Ninety seconds. Hits all four non-Shipping axes simultaneously. Then code.</p>
+  </div>
+</section>
+
+<!-- ════════════════════════ COLOPHON ════════════════════════ -->
+<footer class="colophon">
+  <span class="ornament">¶</span>
+  Set in Fraunces &amp; Public Sans · Code in JetBrains Mono · Rev. 02
+</footer>
+
+</body>
+</html>
